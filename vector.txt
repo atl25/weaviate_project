@@ -1,0 +1,25 @@
+Python script မှာ variable ရှိ/မရှိ စစ်ပြီးမှ အသစ် load လုပ်စေဖို့ ဒီလိုရေးနိုင်ပါတယ်။
+python
+CopyEdit
+from google.colab import files
+uploaded = files.upload()  # ← အသစ်ဖိုင် upload
+
+import pandas as pd
+from sentence_transformers import SentenceTransformer
+
+df = pd.read_csv("Book3.csv")  # ← ဖိုင်နာမည်ကို သင့်လိုလိုပြောင်း
+
+# Model ကို run ထားပြီးသားဆိုရင် မ load တော့ဘူး၊ မ run ထားသေးရင်သာ load လုပ်မယ်။
+if 'model' not in locals():
+    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+
+df["vector"] = df["pali_text"].apply(lambda text: model.encode(str(text)).tolist())
+
+df.to_csv("Book3_with_vectors.csv", index=False)
+
+files.download("Book3_with_vectors.csv")  # ← ပြီးရင် download
+
+
+Colab - sentence-transformers/all-MiniLM-L6-v2
+
+https://colab.research.google.com/drive/1n3HWSJh9OsR29v58_CKrdPf9nOyfqBDh#scrollTo=jWlYOq8iLsYR
