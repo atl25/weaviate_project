@@ -12,9 +12,10 @@ chunk_ids = df["chunk_id"].dropna().tolist()
 # Load LaBSE model
 model = SentenceTransformer("sentence-transformers/LaBSE")
 
-# Token counter using LaBSE
+# ✅ Token counter using LaBSE tokenizer
 def count_tokens(text):
-    return len(model.tokenize([text])[0])
+    return len(model.tokenizer.encode(text, add_special_tokens=False))
+
 
 # Final list of dictionaries
 final_rows = []
