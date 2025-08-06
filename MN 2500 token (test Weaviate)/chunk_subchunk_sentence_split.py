@@ -1,5 +1,6 @@
 import pandas as pd
 from sentence_transformers import SentenceTransformer
+import csv
 
 # CSV input file
 input_file = "MN5_chunk.csv"
@@ -56,5 +57,5 @@ for i, chunk in enumerate(chunks):
 
 # Save output
 output_file = "MN5_chunk_subchunk_sentences.csv"
-pd.DataFrame(final_rows).to_csv(output_file, index=False)
+pd.DataFrame(final_rows).to_csv(output_file, index=False, encoding="utf-8", quoting=csv.QUOTE_ALL)
 print(f"✅ Done! Output saved to {output_file}")
