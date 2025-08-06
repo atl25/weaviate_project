@@ -1,10 +1,8 @@
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 
-# Input CSV file name
+# CSV input file
 input_file = "MN5_chunk.csv"
-
-# Read the CSV
 df = pd.read_csv(input_file)
 chunks = df["pali_text"].dropna().tolist()
 chunk_ids = df["chunk_id"].dropna().tolist()
@@ -12,51 +10,49 @@ chunk_ids = df["chunk_id"].dropna().tolist()
 # Load LaBSE model
 model = SentenceTransformer("sentence-transformers/LaBSE")
 
-# ✅ Token counter using LaBSE tokenizer
+# Token counting function
 def count_tokens(text):
     return len(model.tokenizer.encode(text, add_special_tokens=False))
 
-
-# Final list of dictionaries
+# Final output rows
 final_rows = []
 
 for i, chunk in enumerate(chunks):
     main_chunk_id = chunk_ids[i]
-    
-    # 👇 Use dot to split sentence
+
+    # Step 1: Get sentences using '.'
     sentences = [s.strip() + "." for s in chunk.split(".") if s.strip()]
-    
-    sub_chunk = ""
-    sub_chunk_tokens = 0
-    sub_chunk_index = 1
+
+    subchunk_sentences = []
+    subchunk_token_count = 0
+    subchunk_index = 1
 
     for sentence in sentences:
         token_count = count_tokens(sentence)
-        if sub_chunk_tokens + token_count <= 200:
-            sub_chunk += sentence + " "
-            sub_chunk_tokens += token_count
-        else:
-            for sent in sub_chunk.strip().split("."):
-                sent = sent.strip()
-                if sent:
-                    final_rows.append({
-                        "main_chunk_id": main_chunk_id,
-                        "sub_chunk_id": f"{main_chunk_id}_{sub_chunk_index}",
-                        "sentence": sent + "."
-                    })
-            sub_chunk_index += 1
-            sub_chunk = sentence + " "
-            sub_chunk_tokens = token_count
 
-    if sub_chunk.strip():
-        for sent in sub_chunk.strip().split("."):
-            sent = sent.strip()
-            if sent:
+        if subchunk_token_count + token_count <= 200:
+            subchunk_sentences.append(sentence)
+            subchunk_token_count += token_count
+        else:
+            # save current subchunk
+            for s in subchunk_sentences:
                 final_rows.append({
                     "main_chunk_id": main_chunk_id,
-                    "sub_chunk_id": f"{main_chunk_id}_{sub_chunk_index}",
-                    "sentence": sent + "."
+                    "sub_chunk_id": f"{main_chunk_id}_{subchunk_index}",
+                    "sentence": s
                 })
+            subchunk_index += 1
+            subchunk_sentences = [sentence]
+            subchunk_token_count = token_count
+
+    # handle last subchunk
+    if subchunk_sentences:
+        for s in subchunk_sentences:
+            final_rows.append({
+                "main_chunk_id": main_chunk_id,
+                "sub_chunk_id": f"{main_chunk_id}_{subchunk_index}",
+                "sentence": s
+            })
 
 # Save output
 output_file = "MN5_chunk_subchunk_sentences.csv"
